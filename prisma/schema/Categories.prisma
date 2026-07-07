@@ -1,0 +1,8 @@
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now())
+
+  services Service[]
+}

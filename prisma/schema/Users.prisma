@@ -1,0 +1,19 @@
+model Users {
+  id        String       @id @default(uuid())
+  name      String       @db.VarChar(50)
+  email     String       @unique
+  password  String
+  role      Role         @default(Customer)
+  status    ActiveStatus @default(Active)
+  phone     String       @db.VarChar(11)
+  address   String       @db.VarChar(255)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  technicianProfile    TechnicianProfile?
+  bookingsAsCustomer   Booking[] @relation("CustomerBookings")
+  bookingsAsTechnician Booking[] @relation("TechnicianBookings")
+  reviewsWritten       Review[]  @relation("CustomerReviews")
+  reviewsReceived      Review[]  @relation("TechnicianReviews")
+  payments             Payment[]
+}

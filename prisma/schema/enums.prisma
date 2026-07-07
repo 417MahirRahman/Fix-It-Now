@@ -1,0 +1,41 @@
+enum Role {
+  Customer
+  Technician
+  Admin
+}
+
+enum ActiveStatus {
+  Active
+  Banned
+}
+
+enum DayOfWeek {
+  Mon
+  Tue
+  Wed
+  Thu
+  Fri
+  Sat
+  Sun
+}
+
+enum BookingStatus {
+  Requested
+  Accepted
+  Declined
+  Paid
+  InProgress
+  Completed
+  Cancelled
+}
+
+enum PaymentStatus {
+  Pending
+  Completed
+  Failed
+}
+
+enum PaymentProvider {
+  Stripe
+  Sslcommerz
+}

@@ -3,3 +3,12 @@ export interface ITechnicianFilters {
   location?: string; 
   rating?: number;
 }
+
+export interface IUpdateTechnicianProfile {
+  bio?: string;
+  experienceYears?: number;
+}
+
+export interface IUpdateBookingStatus {
+  status: "Accepted" | "Declined" | "InProgress" | "Completed";
+}

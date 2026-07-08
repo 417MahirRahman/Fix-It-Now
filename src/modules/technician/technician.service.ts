@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import type { ITechnicianFilters } from "./technician.interface";
+import type { ITechnicianFilters, IUpdateBookingStatus, IUpdateTechnicianProfile} from "./technician.interface";
 
 const getAllTechniciansFromDB = async (filters: ITechnicianFilters) => {
   const { type, location, rating } = filters;
@@ -84,7 +84,53 @@ const getTechnicianByIdFromDB = async (id: string) => {
   return { ...technician, avgRating, reviews };
 };
 
+const updateTechnicianProfileInDB = async (
+  userId: string,
+  payload: IUpdateTechnicianProfile,
+) => {
+  const result = await prisma.technicianProfile.update({
+    where: { userId },
+    data: payload,
+  });
+
+  return result;
+};
+
+const getTechnicianBookingsFromDB = async (technicianId: string) => {
+  const result = await prisma.booking.findMany({
+    where: { technicianId },
+    include: {
+      customer: { select: { name: true, phone: true } },
+      service: { select: { title: true, price: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return result;
+};
+
+const updateBookingStatusInDB = async (
+  bookingId: string,
+  technicianId: string,
+  payload: IUpdateBookingStatus,
+) => {
+  // Ensures a technician can only update their own bookings
+  const booking = await prisma.booking.findFirstOrThrow({
+    where: { id: bookingId, technicianId },
+  });
+
+  const result = await prisma.booking.update({
+    where: { id: booking.id },
+    data: { status: payload.status },
+  });
+
+  return result;
+};
+
 export const technicianService = {
   getAllTechniciansFromDB,
   getTechnicianByIdFromDB,
+  updateBookingStatusInDB,
+  updateTechnicianProfileInDB,
+  getTechnicianBookingsFromDB,
 };

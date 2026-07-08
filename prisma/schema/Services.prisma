@@ -5,6 +5,7 @@ model Service {
   title        String   @db.VarChar(100)
   description  String?  @db.VarChar(500)
   price        Decimal  @db.Decimal(10, 2)
+  rating       Float    @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

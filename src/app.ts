@@ -4,6 +4,8 @@ import config from "./config";
 import cors from "cors";
 import { userRoute } from "./modules/user/user.route";
 import { authRoute } from "./modules/aurh/auth.route";
+import { serviceRoutes } from "./modules/service/service.route";
+import { technicianRoutes } from "./modules/technician/technician.route";
 
 const app : Application = express();
 app.use(cors({
@@ -20,5 +22,7 @@ app.get("/", (req : Request, res : Response) => {
 
 app.use("/api/users", userRoute);
 app.use("/api/auth", authRoute);
+app.use("/api/services", serviceRoutes);
+app.use("/api/technicians", technicianRoutes);
 
 export default app;

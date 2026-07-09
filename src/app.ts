@@ -12,6 +12,9 @@ app.use(cors({
     origin: config.app_url,
     credentials: true,
 }));
+const stripe = require("stripe")(
+  config.stripe_secret_key
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

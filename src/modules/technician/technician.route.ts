@@ -12,25 +12,15 @@ router.put(
   auth(Role.Technician),
   technicianController.updateTechnicianProfile,
 );
-router.post(
-  "/services",
-  auth("Technician"),
-  technicianController.createService,
-);
-router.put(
-  "/services/:id",
-  auth("Technician"),
-  technicianController.updateService,
-);
 
 router.post(
   "/availability",
-  auth("Technician"),
+  auth(Role.Technician),
   technicianController.createAvailability,
 );
 router.put(
   "/availability/:id",
-  auth("Technician"),
+  auth(Role.Technician),
   technicianController.updateAvailability,
 );
 router.get(

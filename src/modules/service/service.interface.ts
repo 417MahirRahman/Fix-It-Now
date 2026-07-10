@@ -4,9 +4,13 @@ export interface IServiceFilters {
 }
 
 export interface ICreateService {
-  technicianId: string;
-  categoryId: string;
-  title: string;
-  description?: string;
+  service_name: string;
   price: number;
+  categoryId: string;
+}
+
+export interface IUpdateService {
+  service_name?: string;
+  price?: number;
+  categoryId?: string;
 }

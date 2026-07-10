@@ -1,10 +1,8 @@
 import { prisma } from "../../lib/prisma";
 import type {
   ICreateAvailability,
-  ICreateService,
   IUpdateAvailability,
   IUpdateBookingStatus,
-  IUpdateService,
   IUpdateTechnicianProfile,
 } from "./technician.interface";
 
@@ -29,45 +27,7 @@ const updateTechnicianProfileInDB = async (
     return updatedProfile ;
 };
 
-// Create Service in the database
-const createServiceIntoDB = async (userId: string, payload: ICreateService) => {
-  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
-    where: { userId },
-  });
 
-  const result = await prisma.service.create({
-    data: {
-      technicianId: technicianProfile.id,
-      service_name: payload.service_name,
-      price: payload.price,
-      categoryId: payload.categoryId,
-    },
-  });
-
-  return result;
-};
-
-// Update Service in the database
-const updateServiceInDB = async (
-  userId: string,
-  serviceId: string,
-  payload: IUpdateService,
-) => {
-  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
-    where: { userId },
-  });
-
-  const existingService = await prisma.service.findFirstOrThrow({
-    where: { id: serviceId, technicianId: technicianProfile.id },
-  });
-
-  const result = await prisma.service.update({
-    where: { id: existingService.id },
-    data: payload,
-  });
-
-  return result;
-};
 
 // Create Availability in the database
 const createAvailabilityIntoDB = async (
@@ -140,12 +100,10 @@ const updateBookingStatusInDB = async (
   return result;
 };
 
-export const technicianService = {
+export const technicianProfile = {
   updateBookingStatusInDB,
   updateTechnicianProfileInDB,
   getTechnicianBookingsFromDB,
-  createServiceIntoDB,
-  updateServiceInDB,
   createAvailabilityIntoDB,
   updateAvailabilityInDB,
 };

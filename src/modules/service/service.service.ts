@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
-import type { IServiceFilters } from "./service.interface";
+import { ICreateService, IServiceFilters, IUpdateService } from "./service.interface";
 
+// Get all services from the database with filters
 const getAllServicesFromDB = async (filters: IServiceFilters) => {
   const { type, rating } = filters;
 
@@ -8,7 +9,7 @@ const getAllServicesFromDB = async (filters: IServiceFilters) => {
     where: {
       category: type
         ? {
-            name: {
+            category_name: {
               equals: type,
               mode: "insensitive",
             },
@@ -33,11 +34,54 @@ const getAllServicesFromDB = async (filters: IServiceFilters) => {
         },
       },
     },
+    orderBy: { createdAt: "desc" },
   });
 
   return result;
 };
 
-export const serviceService = {
+// Create Service in the database
+const createServiceIntoDB = async (userId: string, payload: ICreateService) => {
+  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId },
+  });
+
+  const result = await prisma.service.create({
+    data: {
+      technicianId: technicianProfile.id,
+      service_name: payload.service_name,
+      price: payload.price,
+      categoryId: payload.categoryId,
+    },
+  });
+
+  return result;
+};
+
+// Update Service in the database
+const updateServiceInDB = async (
+  userId: string,
+  serviceId: string,
+  payload: IUpdateService,
+) => {
+  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId },
+  });
+
+  const existingService = await prisma.service.findFirstOrThrow({
+    where: { id: serviceId, technicianId: technicianProfile.id },
+  });
+
+  const result = await prisma.service.update({
+    where: { id: existingService.id },
+    data: payload,
+  });
+
+  return result;
+};
+
+export const technicianService = {
   getAllServicesFromDB,
+  createServiceIntoDB,
+  updateServiceInDB,
 };

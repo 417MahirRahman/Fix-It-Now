@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
-import { technicianService } from "./technician.service";
+import { technicianProfile } from "./technician.service";
 import { sendResponse } from "../../utils/sendResponse";
 import { catchAsync } from "../../utils/catchAsync";
 
@@ -45,7 +45,7 @@ const updateTechnicianProfile = catchAsync(
     const userId = req.user?.id as string;
     const payload = req.body;
 
-    const result = await technicianService.updateTechnicianProfileInDB(
+    const result = await technicianProfile.updateTechnicianProfileInDB(
       userId,
       payload,
     );
@@ -59,49 +59,12 @@ const updateTechnicianProfile = catchAsync(
   },
 );
 
-const createService = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user?.id as string;
-    const payload = req.body;
-
-    const result = await technicianService.createServiceIntoDB(userId, payload);
-
-    sendResponse(res, {
-      success: true,
-      statusCode: httpStatus.CREATED,
-      message: "Service created successfully",
-      data: result,
-    });
-  },
-);
-
-const updateService = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user?.id as string;
-    const { id } = req.params;
-    const payload = req.body;
-
-    const result = await technicianService.updateServiceInDB(
-      userId,
-      id as string,
-      payload,
-    );
-
-    sendResponse(res, {
-      success: true,
-      statusCode: httpStatus.OK,
-      message: "Service updated successfully",
-      data: result,
-    });
-  },
-);
-
 const createAvailability = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id as string;
     const payload = req.body;
 
-    const result = await technicianService.createAvailabilityIntoDB(
+    const result = await technicianProfile.createAvailabilityIntoDB(
       userId,
       payload,
     );
@@ -121,7 +84,7 @@ const updateAvailability = catchAsync(
     const { id } = req.params;
     const payload = req.body;
 
-    const result = await technicianService.updateAvailabilityInDB(
+    const result = await technicianProfile.updateAvailabilityInDB(
       userId,
       id as string,
       payload,
@@ -141,7 +104,7 @@ const getTechnicianBookings = catchAsync(
     const technicianId = req.user?.id as string;
 
     const result =
-      await technicianService.getTechnicianBookingsFromDB(technicianId);
+      await technicianProfile.getTechnicianBookingsFromDB(technicianId);
 
     sendResponse(res, {
       success: true,
@@ -158,7 +121,7 @@ const updateBookingStatus = catchAsync(
     const technicianId = req.user?.id as string;
     const payload = req.body;
 
-    const result = await technicianService.updateBookingStatusInDB(
+    const result = await technicianProfile.updateBookingStatusInDB(
       id as string,
       technicianId,
       payload,
@@ -177,8 +140,6 @@ export const technicianController = {
   updateBookingStatus,
   updateTechnicianProfile,
   getTechnicianBookings,
-  createService,
-  updateService,
   createAvailability,
   updateAvailability,
 };

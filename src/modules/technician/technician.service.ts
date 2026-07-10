@@ -1,120 +1,133 @@
 import { prisma } from "../../lib/prisma";
-import type { ITechnicianFilters, IUpdateBookingStatus, IUpdateTechnicianProfile} from "./technician.interface";
+import type {
+  ICreateAvailability,
+  ICreateService,
+  IUpdateAvailability,
+  IUpdateBookingStatus,
+  IUpdateService,
+  IUpdateTechnicianProfile,
+} from "./technician.interface";
 
-const getAllTechniciansFromDB = async (filters: ITechnicianFilters) => {
-  const { type, location, rating } = filters;
-
-  const technicians = await prisma.technicianProfile.findMany({
-    where: {
-      services: type
-        ? {
-            some: {
-              category: {
-                name: { equals: type, mode: "insensitive" },
-              },
-            },
-          }
-        : undefined,
-      user: location
-        ? {
-            address: { contains: location, mode: "insensitive" },
-          }
-        : undefined,
-    },
-    include: {
-      user: {
-        select: { name: true, email: true, phone: true, address: true },
-      },
-      services: {
-        include: { category: true },
-      },
-    },
-  });
-
-  const technicianIds = technicians.map((t) => t.userId);
-
-  const reviewAggregates = await prisma.review.groupBy({
-    by: ["technicianId"],
-    where: { technicianId: { in: technicianIds } },
-    _avg: { rating: true },
-  });
-
-  const ratingMap = new Map(
-    reviewAggregates.map((r) => [r.technicianId, r._avg.rating ?? 0]),
-  );
-
-  let result = technicians.map((t) => ({
-    ...t,
-    avgRating: ratingMap.get(t.userId) ?? 0,
-  }));
-
-  if (rating) {
-    result = result.filter((t) => t.avgRating >= Number(rating));
-  }
-
-  return result;
-};
-
-const getTechnicianByIdFromDB = async (id: string) => {
-  const technician = await prisma.technicianProfile.findUniqueOrThrow({
-    where: { id },
-    include: {
-      user: {
-        select: { name: true, email: true, phone: true, address: true },
-      },
-      services: {
-        include: { category: true },
-      },
-    },
-  });
-
-  const reviews = await prisma.review.findMany({
-    where: { technicianId: technician.userId },
-    include: {
-      customer: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0;
-
-  return { ...technician, avgRating, reviews };
-};
-
+// Update Technician Profile in the database
 const updateTechnicianProfileInDB = async (
   userId: string,
   payload: IUpdateTechnicianProfile,
 ) => {
-  const result = await prisma.technicianProfile.update({
+  
+  const existTechnician = await prisma.technicianProfile.findUnique({
     where: { userId },
+  });
+
+  if (!existTechnician) {
+    throw new Error(`No TechnicianProfile found for userId: ${userId}`);
+  }
+
+  const updatedProfile = await prisma.technicianProfile.update({
+      where: { userId },
+      data: payload,
+    });
+    return updatedProfile ;
+};
+
+// Create Service in the database
+const createServiceIntoDB = async (userId: string, payload: ICreateService) => {
+  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId },
+  });
+
+  const result = await prisma.service.create({
+    data: {
+      technicianId: technicianProfile.id,
+      service_name: payload.service_name,
+      price: payload.price,
+      categoryId: payload.categoryId,
+    },
+  });
+
+  return result;
+};
+
+// Update Service in the database
+const updateServiceInDB = async (
+  userId: string,
+  serviceId: string,
+  payload: IUpdateService,
+) => {
+  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId },
+  });
+
+  const existingService = await prisma.service.findFirstOrThrow({
+    where: { id: serviceId, technicianId: technicianProfile.id },
+  });
+
+  const result = await prisma.service.update({
+    where: { id: existingService.id },
     data: payload,
   });
 
   return result;
 };
 
+// Create Availability in the database
+const createAvailabilityIntoDB = async (
+  userId: string,
+  payload: ICreateAvailability,
+) => {
+  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId },
+  });
+
+  const result = await prisma.availability.create({
+    data: {
+      technicianId: technicianProfile.id,
+      dayOfWeek: payload.dayOfWeek,
+      startTime: payload.startTime,
+      endTime: payload.endTime,
+    },
+  });
+
+  return result;
+};
+
+// Update Availability in the database
+const updateAvailabilityInDB = async (
+  userId: string,
+  availabilityId: string,
+  payload: IUpdateAvailability,
+) => {
+  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId },
+  });
+
+  const existingSlot = await prisma.availability.findFirstOrThrow({
+    where: { id: availabilityId, technicianId: technicianProfile.id },
+  });
+
+  const result = await prisma.availability.update({
+    where: { id: existingSlot.id },
+    data: payload,
+  });
+
+  return result;
+};
+
+// Get Technician Bookings from the database
 const getTechnicianBookingsFromDB = async (technicianId: string) => {
   const result = await prisma.booking.findMany({
     where: { technicianId },
-    include: {
-      customer: { select: { name: true, phone: true } },
-      service: { select: { title: true, price: true } },
-    },
     orderBy: { createdAt: "desc" },
   });
 
   return result;
 };
 
+// Update Booking Status in the database
 const updateBookingStatusInDB = async (
   bookingId: string,
   technicianId: string,
   payload: IUpdateBookingStatus,
 ) => {
-  // Ensures a technician can only update their own bookings
   const booking = await prisma.booking.findFirstOrThrow({
     where: { id: bookingId, technicianId },
   });
@@ -128,9 +141,11 @@ const updateBookingStatusInDB = async (
 };
 
 export const technicianService = {
-  getAllTechniciansFromDB,
-  getTechnicianByIdFromDB,
   updateBookingStatusInDB,
   updateTechnicianProfileInDB,
   getTechnicianBookingsFromDB,
+  createServiceIntoDB,
+  updateServiceInDB,
+  createAvailabilityIntoDB,
+  updateAvailabilityInDB,
 };

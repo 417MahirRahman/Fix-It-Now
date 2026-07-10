@@ -3,6 +3,5 @@ export interface IUpdateUserStatus {
 }
 
 export interface ICreateCategory {
-  name: string;
-  description?: string;
+  category_name: string;
 }

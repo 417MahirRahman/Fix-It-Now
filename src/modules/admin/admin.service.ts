@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import type { IUpdateUserStatus, ICreateCategory } from "./admin.interface";
 
+// Get all users from the database
 const getAllUsersFromDB = async () => {
   const result = await prisma.users.findMany({
     select: {
@@ -19,6 +20,7 @@ const getAllUsersFromDB = async () => {
   return result;
 };
 
+// Update user status in the database
 const updateUserStatusInDB = async (id: string, payload: IUpdateUserStatus) => {
   const result = await prisma.users.update({
     where: { id },
@@ -35,12 +37,15 @@ const updateUserStatusInDB = async (id: string, payload: IUpdateUserStatus) => {
   return result;
 };
 
+// Get all bookings from the database
 const getAllBookingsFromDB = async () => {
   const result = await prisma.booking.findMany({
     include: {
-      customer: { select: { name: true, email: true } },
-      technician: { select: { name: true, email: true } },
-      service: { select: { title: true, price: true } },
+      customer: { select: { name: true, email: true, phone: true } },
+      technician: { select: { name: true, email: true, phone: true } },
+      service: { select: { service_name: true, price: true } },
+      payment: true,
+      review: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -48,6 +53,7 @@ const getAllBookingsFromDB = async () => {
   return result;
 };
 
+// Get all categories from the database
 const getAllCategoriesFromDB = async () => {
   const result = await prisma.category.findMany({
     orderBy: { createdAt: "desc" },
@@ -56,6 +62,7 @@ const getAllCategoriesFromDB = async () => {
   return result;
 };
 
+// Create a new category in the database
 const createCategoryIntoDB = async (payload: ICreateCategory) => {
   const result = await prisma.category.create({
     data: payload,

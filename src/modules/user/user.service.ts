@@ -2,9 +2,10 @@ import bcrypt from "bcryptjs";
 import { IUser } from "./user.interface";
 import { prisma } from "../../lib/prisma";
 import config from "../../config";
-
+import { Role } from "../../../generated/prisma/enums";
 
 const createUserIntoDB = async (payload: IUser) => {
+
   const { name, email, password, role, phone, address } = payload;
   const isUserExist = await prisma.users.findUnique({
     where: { email },
@@ -29,6 +30,14 @@ const createUserIntoDB = async (payload: IUser) => {
       address,
     },
   });
+
+  if(role === Role.Technician){
+    await prisma.technicianProfile.create({
+      data: {
+        userId: createdUser.id,
+      },
+    });
+  }
 
   const user = await prisma.users.findUnique({
     where: {
@@ -55,7 +64,7 @@ const getMyProfileFromDB = async (userId: string) => {
 };
 
 const updateMyProfileInDB = async (userId: string, payload: any) => {
-  const { name, email, profilePhoto, bio } = payload;
+  const { name, email } = payload;
 
   const updatedUser = await prisma.users.update({
     where: { id: userId },

@@ -1,0 +1,9 @@
+model Availability {
+  id           String    @id @default(uuid())
+  technicianId String
+  dayOfWeek    DayOfWeek
+  startTime    String    @db.VarChar(5)
+  endTime      String    @db.VarChar(5)
+
+  technician TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+}

@@ -13,16 +13,6 @@ router.put(
   technicianController.updateTechnicianProfile,
 );
 
-router.post(
-  "/availability",
-  auth(Role.Technician),
-  technicianController.createAvailability,
-);
-router.put(
-  "/availability/:id",
-  auth(Role.Technician),
-  technicianController.updateAvailability,
-);
 router.get(
   "/bookings",
   auth(Role.Technician),

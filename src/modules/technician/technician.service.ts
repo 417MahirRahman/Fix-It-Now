@@ -1,10 +1,72 @@
 import { prisma } from "../../lib/prisma";
 import type {
-  ICreateAvailability,
-  IUpdateAvailability,
+  ITechnicianFilters,
   IUpdateBookingStatus,
   IUpdateTechnicianProfile,
 } from "./technician.interface";
+
+const getAllTechniciansFromDB = async (filters: ITechnicianFilters) => {
+  const { type, location, rating } = filters;
+
+  const technicians = await prisma.technicianProfile.findMany({
+    where: {
+      services: type
+        ? {
+            some: {
+              category: {
+                category_name: { equals: type, mode: "insensitive" },
+              },
+            },
+          }
+        : undefined,
+      user: location
+        ? {
+            address: { contains: location, mode: "insensitive" },
+          }
+        : undefined,
+    },
+    include: {
+      user: {
+        select: { name: true, email: true, phone: true, address: true },
+      },
+      services: {
+        include: { category: true },
+      },
+    },
+  });
+
+  return technicians;
+};
+
+const getTechnicianByIdFromDB = async (id: string) => {
+  const technician = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { id },
+    include: {
+      user: {
+        select: { name: true, email: true, phone: true, address: true },
+      },
+      services: {
+        include: { category: true },
+      },
+      availability: true,
+    },
+  });
+
+  const reviews = await prisma.review.findMany({
+    where: { technicianId: technician.userId },
+    include: {
+      customer: { select: { name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+  return { ...technician, avgRating, reviews };
+};
 
 // Update Technician Profile in the database
 const updateTechnicianProfileInDB = async (
@@ -25,51 +87,6 @@ const updateTechnicianProfileInDB = async (
       data: payload,
     });
     return updatedProfile ;
-};
-
-
-
-// Create Availability in the database
-const createAvailabilityIntoDB = async (
-  userId: string,
-  payload: ICreateAvailability,
-) => {
-  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
-    where: { userId },
-  });
-
-  const result = await prisma.availability.create({
-    data: {
-      technicianId: technicianProfile.id,
-      dayOfWeek: payload.dayOfWeek,
-      startTime: payload.startTime,
-      endTime: payload.endTime,
-    },
-  });
-
-  return result;
-};
-
-// Update Availability in the database
-const updateAvailabilityInDB = async (
-  userId: string,
-  availabilityId: string,
-  payload: IUpdateAvailability,
-) => {
-  const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
-    where: { userId },
-  });
-
-  const existingSlot = await prisma.availability.findFirstOrThrow({
-    where: { id: availabilityId, technicianId: technicianProfile.id },
-  });
-
-  const result = await prisma.availability.update({
-    where: { id: existingSlot.id },
-    data: payload,
-  });
-
-  return result;
 };
 
 // Get Technician Bookings from the database
@@ -101,9 +118,9 @@ const updateBookingStatusInDB = async (
 };
 
 export const technicianProfile = {
+  getAllTechniciansFromDB,
+  getTechnicianByIdFromDB,
   updateBookingStatusInDB,
   updateTechnicianProfileInDB,
   getTechnicianBookingsFromDB,
-  createAvailabilityIntoDB,
-  updateAvailabilityInDB,
 };

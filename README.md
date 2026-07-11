@@ -55,7 +55,7 @@ Customers can cancel any time before `InProgress`.
 
 ## API Endpoints
 
-See [API.md](./API.md) for the full endpoint list.
+See [API.md](./API Endpoints.md) for the full endpoint list.
 
 ## Getting Started
 

@@ -66,6 +66,39 @@
             "header": []
           },
           "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "auth": {
+              "type": "bearer"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Ahmed Rahman\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/users/my-profile",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "users",
+                "my-profile"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -366,12 +399,12 @@
       "name": "Services & Technicians (Public)",
       "item": [
         {
-          "name": "Get all services with filters (type, location, rating)",
+          "name": "Get all services with filters (type, rating)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5000/api/services",
+              "raw": "http://localhost:5000/api/services/type=plumbing",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -379,14 +412,15 @@
               "port": "5000",
               "path": [
                 "api",
-                "services"
+                "services",
+                "type=plumbing"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Get all technicians with filters",
+          "name": "Get all technicians with reviews",
           "request": {
             "method": "GET",
             "header": [],

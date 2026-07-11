@@ -9,6 +9,7 @@ Base URL: `http://localhost:5000/api`
 | POST | /api/users | Register new user (customer/technician/admin) |
 | POST | /api/auth/login | Login user, return JWT |
 | GET | /api/users/me | Get current authenticated user's profile |
+| PUT | /api/users/my-profile | Update user's profile |
 
 ## Services & Technicians (Public)
 

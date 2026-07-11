@@ -4,7 +4,7 @@ A backend-only REST API for a home services marketplace connecting **Customers**
 
 ## Live Demo
 
-🔗 [Live API](https://your-deployed-url.com) — replace with your deployed link
+🔗 [Live API](https://fix-it-now-murex.vercel.app/)
 
 
 ## Overview

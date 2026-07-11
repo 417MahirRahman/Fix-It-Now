@@ -15,7 +15,7 @@ Base URL: `http://localhost:5000/api`
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | /api/services | Get all services with filters (type, rating) |
-| GET | /api/technicians | Get all technicians with filters (type, location, rating) |
+| GET | /api/technicians | Get all technicians with filters (type, location) |
 | GET | /api/technicians/:id | Get technician profile with reviews |
 | GET | /api/categories | Get all service categories |
 

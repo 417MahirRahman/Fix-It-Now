@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get("/", (req : Request, res : Response) => {
-    res.send("Hello, World!");
+    res.send("Server is running!");
 });
 
 app.use("/api/users", userRoute);

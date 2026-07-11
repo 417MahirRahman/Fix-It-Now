@@ -29,7 +29,7 @@ const createPaymentSessionIntoDB = async (
 
   if (existingPayment) {
     throw new Error(
-      existingPayment.status === "Completed"
+      existingPayment.status === "Paid"
         ? "This booking has already been paid"
         : "A payment session already exists for this booking",
     );
@@ -94,7 +94,7 @@ const confirmPaymentInDB = async (sessionId: string) => {
     const updatedPayment = await tx.payment.update({
       where: { id: paymentId },
       data: {
-        status: "Completed",
+        status: "Paid",
         transactionId: session.payment_intent as string,
         paidAt: new Date(),
       },
@@ -102,7 +102,7 @@ const confirmPaymentInDB = async (sessionId: string) => {
 
     await tx.booking.update({
       where: { id: updatedPayment.bookingId },
-      data: { status: "Paid" },
+      data: { status: "InProgress" },
     });
 
     return updatedPayment;

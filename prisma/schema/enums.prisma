@@ -31,7 +31,7 @@ enum BookingStatus {
 
 enum PaymentStatus {
   Pending
-  Completed
+  Paid
   Failed
 }
 

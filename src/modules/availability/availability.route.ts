@@ -6,12 +6,12 @@ import { availabilityController } from "./availability.controller";
 const router = Router();
 
 router.post(
-  "/availability",
+  "/",
   auth(Role.Technician),
   availabilityController.createAvailability,
 );
 router.put(
-  "/availability/:id",
+  "/:id",
   auth(Role.Technician),
   availabilityController.updateAvailability,
 );

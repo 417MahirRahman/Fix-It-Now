@@ -5,8 +5,7 @@ import { auth } from "../../middlewares/auth";
 
 const router = Router();
 
-// router.get("/", technicianController.getAllTechnicians);
-// router.get("/:id", technicianController.getTechnicianById);
+router.get("/", technicianController.getAllTechnicians);
 router.put(
   "/profile",
   auth(Role.Technician),
@@ -23,5 +22,6 @@ router.patch(
   auth(Role.Technician),
   technicianController.updateBookingStatus,
 );
+router.get("/:id", technicianController.getTechnicianById);
 
 export const technicianRoutes = router;

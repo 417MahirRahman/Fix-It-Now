@@ -10,18 +10,19 @@ const createBookingIntoDB = async (
   // Get the service to find which technician owns it
   const service = await prisma.service.findUniqueOrThrow({
     where: { id: serviceId },
+    include: { technician: true },
   });
 
   const result = await prisma.booking.create({
     data: {
       customerId,
-      technicianId: service.technicianId,
+      technicianId: service.technician.userId,
       serviceId,
       scheduledTime,
       notes,
     },
     include: {
-      service: { select: { title: true, price: true } },
+      service: { select: { service_name: true, price: true } },
       technician: { select: { name: true, phone: true } },
     },
   });
@@ -38,7 +39,7 @@ const getMyBookingsFromDB = async (userId: string) => {
     include: {
       customer: { select: { name: true, phone: true } },
       technician: { select: { name: true, phone: true } },
-      service: { select: { title: true, price: true } },
+      service: { select: { service_name: true, price: true } },
       payment: true,
     },
     orderBy: { createdAt: "desc" },
@@ -56,7 +57,7 @@ const getBookingByIdFromDB = async (id: string, userId: string) => {
     include: {
       customer: { select: { name: true, phone: true, address: true } },
       technician: { select: { name: true, phone: true } },
-      service: { select: { title: true, price: true, description: true } },
+      service: { select: { service_name: true, price: true } },
       payment: true,
       review: true,
     },

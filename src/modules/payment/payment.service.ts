@@ -23,9 +23,20 @@ const createPaymentSessionIntoDB = async (
     throw new Error("Booking must be accepted before payment");
   }
 
+  const existingPayment = await prisma.payment.findUnique({
+    where: { bookingId },
+  });
+
+  if (existingPayment) {
+    throw new Error(
+      existingPayment.status === "Completed"
+        ? "This booking has already been paid"
+        : "A payment session already exists for this booking",
+    );
+  }
+
   const amount = Number(booking.service.price);
 
-  // Create a pending Payment record first
   const payment = await prisma.payment.create({
     data: {
       bookingId,
@@ -36,29 +47,38 @@ const createPaymentSessionIntoDB = async (
     },
   });
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: booking.service.title,
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: booking.service.service_name,
+            },
+            unit_amount: Math.round(amount * 100),
           },
-          unit_amount: Math.round(amount * 100), // Stripe expects cents
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      success_url: `${process.env.APP_URL}/payment-success?paymentId=${payment.id}&sessionId={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.APP_URL}/payment-cancelled`,
+      metadata: {
+        paymentId: payment.id,
+        bookingId,
       },
-    ],
-    success_url: `${process.env.CLIENT_URL}/payment-success?paymentId=${payment.id}`,
-    cancel_url: `${process.env.CLIENT_URL}/payment-cancelled`,
-    metadata: {
-      paymentId: payment.id,
-      bookingId,
-    },
-  });
+    });
 
-  return { checkoutUrl: session.url, paymentId: payment.id };
+    return {
+      checkoutUrl: session.url,
+      paymentId: payment.id,
+      sessionId: session.id,
+    };
+  } catch (error) {
+    await prisma.payment.delete({ where: { id: payment.id } });
+    throw error;
+  }
 };
 
 const confirmPaymentInDB = async (sessionId: string) => {
@@ -70,19 +90,22 @@ const confirmPaymentInDB = async (sessionId: string) => {
     throw new Error("Payment not completed");
   }
 
-  const payment = await prisma.payment.update({
-    where: { id: paymentId },
-    data: {
-      status: "Completed",
-      transactionId: session.payment_intent as string,
-      paidAt: new Date(),
-    },
-  });
+  const payment = await prisma.$transaction(async (tx) => {
+    const updatedPayment = await tx.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: "Completed",
+        transactionId: session.payment_intent as string,
+        paidAt: new Date(),
+      },
+    });
 
-  // Move booking forward to PAID
-  await prisma.booking.update({
-    where: { id: payment.bookingId },
-    data: { status: "Paid" },
+    await tx.booking.update({
+      where: { id: updatedPayment.bookingId },
+      data: { status: "Paid" },
+    });
+
+    return updatedPayment;
   });
 
   return payment;
@@ -93,7 +116,7 @@ const getMyPaymentsFromDB = async (userId: string) => {
     where: { userId },
     include: {
       booking: {
-        include: { service: { select: { title: true } } },
+        include: { service: { select: { service_name: true } } },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -107,7 +130,7 @@ const getPaymentByIdFromDB = async (id: string, userId: string) => {
     where: { id, userId },
     include: {
       booking: {
-        include: { service: { select: { title: true, price: true } } },
+        include: { service: { select: { service_name: true, price: true } } },
       },
     },
   });

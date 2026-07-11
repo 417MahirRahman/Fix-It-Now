@@ -6,7 +6,7 @@ import type {
 } from "./technician.interface";
 
 const getAllTechniciansFromDB = async (filters: ITechnicianFilters) => {
-  const { type, location, rating } = filters;
+  const { type, location } = filters;
 
   const technicians = await prisma.technicianProfile.findMany({
     where: {
@@ -30,7 +30,21 @@ const getAllTechniciansFromDB = async (filters: ITechnicianFilters) => {
         select: { name: true, email: true, phone: true, address: true },
       },
       services: {
-        include: { category: true },
+        include: {
+          category: true,
+          bookings: {
+            select: {
+              review: {
+                select: {
+                  rating: true,
+                  review: true,
+                  createdAt: true,
+                  customer: { select: { name: true } },
+                },
+              },
+            },
+          },
+        },
       },
     },
   });
@@ -46,26 +60,26 @@ const getTechnicianByIdFromDB = async (id: string) => {
         select: { name: true, email: true, phone: true, address: true },
       },
       services: {
-        include: { category: true },
+        include: {
+          category: true,
+          bookings: {
+            select: {
+              review: {
+                select: {
+                  rating: true,
+                  review: true,
+                  createdAt: true,
+                  customer: { select: { name: true } },
+                },
+              },
+            },
+          },
+        },
       },
       availability: true,
     },
   });
-
-  const reviews = await prisma.review.findMany({
-    where: { technicianId: technician.userId },
-    include: {
-      customer: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0;
-
-  return { ...technician, avgRating, reviews };
+  return technician;  
 };
 
 // Update Technician Profile in the database

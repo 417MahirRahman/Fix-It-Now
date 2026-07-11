@@ -7,14 +7,18 @@ const router = Router();
 
 router.get("/", serviceController.getAllServices);
 router.post(
-  "/services",
+  "/",
   auth(Role.Technician),
   serviceController.createService,
 );
 router.put(
-  "/services/:id",
+  "/:id",
   auth(Role.Technician),
   serviceController.updateService,
+);
+router.get(
+  "/categories",
+  serviceController.getAllCategories
 );
 
 export const serviceRoutes = router;

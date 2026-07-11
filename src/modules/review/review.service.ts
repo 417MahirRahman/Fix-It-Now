@@ -5,11 +5,13 @@ const createReviewIntoDB = async (
   customerId: string,
   payload: ICreateReview,
 ) => {
-  const { bookingId, rating, comment } = payload;
+  const { bookingId, rating, review } = payload;
 
   const booking = await prisma.booking.findUniqueOrThrow({
     where: { id: bookingId },
   });
+
+  console.log("Booking found:", booking.customerId, "Customer ID:", customerId);
 
   if (booking.customerId !== customerId) {
     throw new Error("You can only review your own bookings");
@@ -27,30 +29,29 @@ const createReviewIntoDB = async (
     throw new Error("This booking has already been reviewed");
   }
 
-  const result = await prisma.review.create({
-    data: {
-      bookingId,
-      customerId,
-      technicianId: booking.technicianId,
-      rating,
-      comment,
-    },
-  });
+  if(rating === 0 || rating > 5){
+    throw new Error("Rating must be between 1 and 5");
+  }
 
-  // Recalculate and update the service's average rating
-  const serviceReviews = await prisma.review.findMany({
-    where: {
-      booking: { serviceId: booking.serviceId },
-    },
-  });
+  let avgRating = 0;
+  if(avgRating === 0){
+    avgRating += rating;
+  }else{
+    avgRating = (avgRating + rating) / 2;
+  }
 
-  const avgRating =
-    serviceReviews.reduce((sum, r) => sum + r.rating, 0) /
-    serviceReviews.length;
+  const result = await prisma.$transaction(async (tx) => {
+    const newReview = await tx.review.create({
+      data: {
+        bookingId,
+        customerId,
+        technicianId: booking.technicianId,
+        rating: avgRating,
+        review,
+      },
+    });
 
-  await prisma.service.update({
-    where: { id: booking.serviceId },
-    data: { rating: avgRating },
+    return newReview;
   });
 
   return result;

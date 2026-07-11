@@ -61,8 +61,22 @@ const updateService = catchAsync(
   },
 );
 
+const getAllCategories = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const result = await technicianService.getAllCategoriesFromDB();
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Categories retrieved successfully",
+      data: result,
+    });
+  },
+);
+
 export const serviceController = {
   getAllServices,
   createService,
   updateService,
+  getAllCategories
 };

@@ -58,6 +58,16 @@ const getMyProfileFromDB = async (userId: string) => {
     omit: {
       password: true,
     },
+    include: {
+      technicianProfile: {
+        select: {
+          bio: true,
+          experienceYears: true,
+          services: true,
+          availability: true,
+        },
+      },
+    },
   });
 
   return user;

@@ -6,11 +6,11 @@ export interface IServiceFilters {
 export interface ICreateService {
   service_name: string;
   price: number;
-  categoryId: string;
+  categoryName: string;
 }
 
 export interface IUpdateService {
   service_name?: string;
   price?: number;
-  categoryId?: string;
+  categoryName: string;
 }

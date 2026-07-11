@@ -46,12 +46,16 @@ const createServiceIntoDB = async (userId: string, payload: ICreateService) => {
     where: { userId },
   });
 
+  const category = await prisma.category.findUniqueOrThrow({
+    where: { category_name: payload.categoryName },
+  });
+
   const result = await prisma.service.create({
     data: {
       technicianId: technicianProfile.id,
       service_name: payload.service_name,
       price: payload.price,
-      categoryId: payload.categoryId,
+      categoryId: category.id,
     },
   });
 
@@ -80,8 +84,18 @@ const updateServiceInDB = async (
   return result;
 };
 
+// Get all categories from the database
+const getAllCategoriesFromDB = async () => {
+  const result = await prisma.category.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  return result;
+};
+
 export const technicianService = {
   getAllServicesFromDB,
   createServiceIntoDB,
   updateServiceInDB,
+  getAllCategoriesFromDB,
 };

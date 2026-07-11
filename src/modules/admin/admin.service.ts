@@ -4,6 +4,11 @@ import type { IUpdateUserStatus, ICreateCategory } from "./admin.interface";
 // Get all users from the database
 const getAllUsersFromDB = async () => {
   const result = await prisma.users.findMany({
+    where: {
+      role: {
+        in: ["Customer", "Technician"],
+      },
+    },
     select: {
       id: true,
       name: true,

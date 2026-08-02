@@ -116,7 +116,10 @@ const getMyPaymentsFromDB = async (userId: string) => {
     where: { userId },
     include: {
       booking: {
-        include: { service: { select: { service_name: true } } },
+        include: { 
+          service: { select: { service_name: true } },
+          technician: { select: { id: true, name: true } } 
+        },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -130,11 +133,34 @@ const getPaymentByIdFromDB = async (id: string, userId: string) => {
     where: { id, userId },
     include: {
       booking: {
-        include: { service: { select: { service_name: true, price: true } } },
+        include: { 
+          service: { select: { service_name: true, price: true } }, 
+          technician: { select: { id: true, name: true } } 
+        },
       },
     },
   });
 
+  return result;
+};
+
+const getTechnicianPaymentsFromDB = async (technicianUserId: string) => {
+  const result = await prisma.payment.findMany({
+    where: {
+      booking: {
+        technicianId: technicianUserId,
+      },
+    },
+    include: {
+      user: { select: { id: true, name: true } }, // sender/customer
+      booking: {
+        include: {
+          service: { select: { service_name: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
   return result;
 };
 
@@ -143,4 +169,5 @@ export const paymentService = {
   confirmPaymentInDB,
   getMyPaymentsFromDB,
   getPaymentByIdFromDB,
+  getTechnicianPaymentsFromDB
 };

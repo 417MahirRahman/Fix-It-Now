@@ -69,9 +69,26 @@ const getPaymentById = catchAsync(
   },
 );
 
+const getTechnicianPayments = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const technicianUserId = req.user?.id as string;
+
+    const result =
+      await paymentService.getTechnicianPaymentsFromDB(technicianUserId);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Technician payments retrieved successfully",
+      data: result,
+    });
+  },
+);
+
 export const paymentController = {
   createPaymentSession,
   confirmPayment,
   getMyPayments,
   getPaymentById,
+  getTechnicianPayments,
 };

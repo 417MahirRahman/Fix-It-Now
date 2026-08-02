@@ -9,5 +9,6 @@ router.patch("/users/:id", auth(Role.Admin), adminController.updateUserStatus);
 router.get("/bookings", auth(Role.Admin), adminController.getAllBookings);
 router.get("/categories", auth(Role.Admin), adminController.getAllCategories);
 router.post("/categories", auth(Role.Admin), adminController.createCategory);
+router.get("/statistics", auth(Role.Admin), adminController.getStatistics);
 
 export const adminRoutes = router;

@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import type { IUpdateUserStatus, ICreateCategory } from "./admin.interface";
+import type { IUpdateUserStatus, ICreateCategory, IAdminStatistics } from "./admin.interface";
 
 // Get all users from the database
 const getAllUsersFromDB = async () => {
@@ -76,10 +76,55 @@ const createCategoryIntoDB = async (payload: ICreateCategory) => {
   return result;
 };
 
+const getStatisticsFromDB = async (): Promise<IAdminStatistics> => {
+  const [
+    totalUsers,
+    totalCustomers,
+    totalTechnicians,
+    totalBookings,
+    bookingsGrouped,
+    totalCategories,
+    revenueAggregate,
+    totalPayments,
+  ] = await Promise.all([
+    prisma.users.count({ where: { role: { in: ["Customer", "Technician"] } } }),
+    prisma.users.count({ where: { role: "Customer" } }),
+    prisma.users.count({ where: { role: "Technician" } }),
+    prisma.booking.count(),
+    prisma.booking.groupBy({
+      by: ["status"],
+      _count: { status: true },
+    }),
+    prisma.category.count(),
+    prisma.payment.aggregate({
+      where: { status: "Paid" },
+      _sum: { amount: true },
+    }),
+    prisma.payment.count(),
+  ]);
+
+  const bookingsByStatus: Record<string, number> = {};
+  bookingsGrouped.forEach((group) => {
+    bookingsByStatus[group.status] = group._count.status;
+  });
+
+  return {
+    totalUsers,
+    totalCustomers,
+    totalTechnicians,
+    totalBookings,
+    bookingsByStatus,
+    totalCategories,
+    totalRevenue: Number(revenueAggregate._sum.amount ?? 0),
+    totalPayments,
+  };
+};
+
 export const adminService = {
   getAllUsersFromDB,
   updateUserStatusInDB,
   getAllBookingsFromDB,
   getAllCategoriesFromDB,
   createCategoryIntoDB,
+  getStatisticsFromDB,
 };

@@ -74,10 +74,24 @@ const createCategory = catchAsync(
   },
 );
 
+const getStatistics = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const result = await adminService.getStatisticsFromDB();
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Statistics retrieved successfully",
+      data: result,
+    });
+  },
+);
+
 export const adminController = {
   getAllUsers,
   updateUserStatus,
   getAllBookings,
   getAllCategories,
   createCategory,
+  getStatistics,
 };

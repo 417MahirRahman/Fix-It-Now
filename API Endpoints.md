@@ -27,6 +27,7 @@ Base URL: `http://localhost:5000/api`
 | POST | /api/bookings | Create new booking (customer) |
 | GET | /api/bookings | Get user's bookings |
 | GET | /api/bookings/:id | Get booking details |
+| DELETE | /api/bookings/:id/cancel | Cancel a booking by ID |
 
 ## Payments (Stripe)
 
@@ -48,12 +49,14 @@ Base URL: `http://localhost:5000/api`
 | PUT | /api/technician/availability/:id | Update an existing availability slot |
 | GET | /api/technician/bookings | Get technician's bookings |
 | PATCH | /api/technician/bookings/:id | Update booking status (accept/decline/complete) |
+| DELETE | /api/technician/services/:id | Delete a technician service by ID |
 
 ## Reviews
 
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | /api/reviews | Create review (after job completion) |
+| GET | /api/reviews/technician/:technicianId | Get reviews for a technician |
 
 ## Admin
 
@@ -64,3 +67,5 @@ Base URL: `http://localhost:5000/api`
 | GET | /api/admin/bookings | Get all bookings |
 | GET | /api/admin/categories | Get all categories |
 | POST | /api/admin/categories | Create new service category |
+| GET | /api/admin/statistics | Get admin dashboard statistics |
+| DELETE | /api/admin/categories/:id | Delete a service category by ID |

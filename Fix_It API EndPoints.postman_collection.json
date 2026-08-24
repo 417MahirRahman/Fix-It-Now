@@ -200,6 +200,49 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/statistics",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "admin",
+                "statistics"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category By ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/admin/categories/id",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "admin",
+                "categories",
+                "id"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -363,6 +406,28 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Delete Service By ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/technician/services/id",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "technician",
+                "services",
+                "id"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -388,6 +453,29 @@
               "path": [
                 "api",
                 "reviews"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Review By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/reviews//technician/technicianId",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "reviews",
+                "",
+                "technician",
+                "technicianId"
               ]
             }
           },
@@ -544,6 +632,28 @@
                 "api",
                 "bookings",
                 ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Booking By ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/bookings/id/cancel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "bookings",
+                "id",
+                "cancel"
               ]
             }
           },

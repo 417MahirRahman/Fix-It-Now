@@ -87,6 +87,21 @@ const getStatistics = catchAsync(
   },
 );
 
+const deleteCategory = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    const result = await adminService.deleteCategoryFromDB(id as string);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Category deleted successfully",
+      data: result,
+    });
+  },
+);
+
 export const adminController = {
   getAllUsers,
   updateUserStatus,
@@ -94,4 +109,5 @@ export const adminController = {
   getAllCategories,
   createCategory,
   getStatistics,
+  deleteCategory,
 };

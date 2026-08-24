@@ -66,8 +66,43 @@ const getBookingByIdFromDB = async (id: string, userId: string) => {
   return booking;
 };
 
+const cancelBookingFromDB = async (
+  bookingId: string,
+  customerId: string,
+) => {
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: bookingId,
+    },
+  });
+
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+
+  if (booking.customerId !== customerId) {
+    throw new Error("You can only cancel your own booking");
+  }
+
+  if (booking.status !== "Requested") {
+    throw new Error("Only requested bookings can be cancelled");
+  }
+
+  const result = await prisma.booking.update({
+    where: {
+      id: bookingId,
+    },
+    data: {
+      status: "Cancelled",
+    },
+  });
+
+  return result;
+};
+
 export const bookingService = {
   createBookingIntoDB,
   getMyBookingsFromDB,
   getBookingByIdFromDB,
+  cancelBookingFromDB,
 };

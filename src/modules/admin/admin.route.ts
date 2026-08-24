@@ -10,5 +10,10 @@ router.get("/bookings", auth(Role.Admin), adminController.getAllBookings);
 router.get("/categories", auth(Role.Admin), adminController.getAllCategories);
 router.post("/categories", auth(Role.Admin), adminController.createCategory);
 router.get("/statistics", auth(Role.Admin), adminController.getStatistics);
+router.delete(
+  "/categories/:id",
+  auth(Role.Admin),
+  adminController.deleteCategory,
+);
 
 export const adminRoutes = router;

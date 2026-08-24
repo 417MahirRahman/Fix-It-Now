@@ -29,7 +29,9 @@ const getTechnicianById = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    const result = await technicianProfile.getTechnicianByIdFromDB(id as string);
+    const result = await technicianProfile.getTechnicianByIdFromDB(
+      id as string,
+    );
 
     sendResponse(res, {
       success: true,
@@ -96,10 +98,111 @@ const updateBookingStatus = catchAsync(
   },
 );
 
+const createService = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const technicianId = req.user?.id as string;
+    const payload = req.body;
+
+    const result = await technicianProfile.createServiceInDB(
+      technicianId,
+      payload,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.CREATED,
+      message: "Service created successfully",
+      data: result,
+    });
+  },
+);
+
+const updateService = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const technicianId = req.user?.id as string;
+    const payload = req.body;
+
+    const result = await technicianProfile.updateServiceInDB(
+      id as string,
+      technicianId,
+      payload,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Service updated successfully",
+      data: result,
+    });
+  },
+);
+
+const createAvailability = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const technicianId = req.user?.id as string;
+    const payload = req.body;
+
+    const result = await technicianProfile.createAvailabilityInDB(
+      technicianId,
+      payload,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.CREATED,
+      message: "Availability slot created successfully",
+      data: result,
+    });
+  },
+);
+
+const updateAvailability = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const technicianId = req.user?.id as string;
+    const payload = req.body;
+
+    const result = await technicianProfile.updateAvailabilityInDB(
+      id as string,
+      technicianId,
+      payload,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Availability slot updated successfully",
+      data: result,
+    });
+  },
+);
+
+const deleteService = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id as string;
+    const { id } = req.params;
+
+    const result = await technicianProfile.deleteServiceFromDB(userId, id as string);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Service deleted successfully",
+      data: result,
+    });
+  },
+);
+
 export const technicianController = {
   getAllTechnicians,
   getTechnicianById,
   updateBookingStatus,
   updateTechnicianProfile,
   getTechnicianBookings,
+  createService,
+  updateService,
+  createAvailability,
+  updateAvailability,
+  deleteService,
 };

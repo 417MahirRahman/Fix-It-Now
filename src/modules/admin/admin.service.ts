@@ -1,7 +1,10 @@
 import { prisma } from "../../lib/prisma";
-import type { IUpdateUserStatus, ICreateCategory, IAdminStatistics } from "./admin.interface";
+import type {
+  IUpdateUserStatus,
+  ICreateCategory,
+  IAdminStatistics,
+} from "./admin.interface";
 
-// Get all users from the database
 const getAllUsersFromDB = async () => {
   const result = await prisma.users.findMany({
     where: {
@@ -25,7 +28,6 @@ const getAllUsersFromDB = async () => {
   return result;
 };
 
-// Update user status in the database
 const updateUserStatusInDB = async (id: string, payload: IUpdateUserStatus) => {
   const result = await prisma.users.update({
     where: { id },
@@ -42,7 +44,6 @@ const updateUserStatusInDB = async (id: string, payload: IUpdateUserStatus) => {
   return result;
 };
 
-// Get all bookings from the database
 const getAllBookingsFromDB = async () => {
   const result = await prisma.booking.findMany({
     include: {
@@ -58,7 +59,6 @@ const getAllBookingsFromDB = async () => {
   return result;
 };
 
-// Get all categories from the database
 const getAllCategoriesFromDB = async () => {
   const result = await prisma.category.findMany({
     orderBy: { createdAt: "desc" },
@@ -67,7 +67,6 @@ const getAllCategoriesFromDB = async () => {
   return result;
 };
 
-// Create a new category in the database
 const createCategoryIntoDB = async (payload: ICreateCategory) => {
   const result = await prisma.category.create({
     data: payload,
@@ -120,6 +119,29 @@ const getStatisticsFromDB = async (): Promise<IAdminStatistics> => {
   };
 };
 
+const deleteCategoryFromDB = async (id: string) => {
+  const existingCategory = await prisma.category.findUnique({
+    where: { id },
+    include: { services: true },
+  });
+
+  if (!existingCategory) {
+    throw new Error("Category not found");
+  }
+
+  if (existingCategory.services.length > 0) {
+    throw new Error(
+      "This category has services linked to it and cannot be deleted",
+    );
+  }
+
+  const result = await prisma.category.delete({
+    where: { id },
+  });
+
+  return result;
+};
+
 export const adminService = {
   getAllUsersFromDB,
   updateUserStatusInDB,
@@ -127,4 +149,5 @@ export const adminService = {
   getAllCategoriesFromDB,
   createCategoryIntoDB,
   getStatisticsFromDB,
+  deleteCategoryFromDB,
 };

@@ -13,10 +13,23 @@ import { paymentRoutes } from "./modules/payment/payment.route";
 import { reviewRoutes } from "./modules/review/review.route";
 
 const app : Application = express();
-app.use(cors({
-    origin: config.app_url,
+const allowedOrigins = [
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-}));
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

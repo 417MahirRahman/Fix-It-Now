@@ -11,8 +11,12 @@ const createPaymentSessionIntoDB = async (
   const { bookingId } = payload;
 
   const booking = await prisma.booking.findUniqueOrThrow({
-    where: { id: bookingId },
-    include: { service: true },
+    where: {
+      id: bookingId,
+    },
+    include: {
+      service: true,
+    },
   });
 
   if (booking.customerId !== userId) {
@@ -24,32 +28,35 @@ const createPaymentSessionIntoDB = async (
   }
 
   const existingPayment = await prisma.payment.findUnique({
-    where: { bookingId },
+    where: {
+      bookingId,
+    },
   });
 
-  if (existingPayment) {
-    throw new Error(
-      existingPayment.status === "Paid"
-        ? "This booking has already been paid"
-        : "A payment session already exists for this booking",
-    );
+  if (existingPayment?.status === "Paid") {
+    throw new Error("This booking has already been paid");
   }
 
   const amount = Number(booking.service.price);
 
-  const payment = await prisma.payment.create({
-    data: {
-      bookingId,
-      userId,
-      amount,
-      provider: "Stripe",
-      status: "Pending",
-    },
-  });
+  let payment = existingPayment;
+
+  if (!payment) {
+    payment = await prisma.payment.create({
+      data: {
+        bookingId,
+        userId,
+        amount,
+        provider: "Stripe",
+        status: "Pending",
+      },
+    });
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+
       line_items: [
         {
           price_data: {
@@ -62,11 +69,15 @@ const createPaymentSessionIntoDB = async (
           quantity: 1,
         },
       ],
-      success_url: `${process.env.APP_URL}/payment-success?paymentId=${payment.id}&sessionId={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.APP_URL}/payment-cancelled`,
+
+      success_url: `${process.env.FRONTEND_URL}/customer-dashboard/payment-success?sessionId={CHECKOUT_SESSION_ID}`,
+
+      cancel_url: `${process.env.FRONTEND_URL}/customer-dashboard/payment-cancelled`,
+
       metadata: {
         paymentId: payment.id,
         bookingId,
+        userId,
       },
     });
 
@@ -76,7 +87,14 @@ const createPaymentSessionIntoDB = async (
       sessionId: session.id,
     };
   } catch (error) {
-    await prisma.payment.delete({ where: { id: payment.id } });
+    if (!existingPayment) {
+      await prisma.payment.delete({
+        where: {
+          id: payment.id,
+        },
+      });
+    }
+
     throw error;
   }
 };
@@ -84,25 +102,80 @@ const createPaymentSessionIntoDB = async (
 const confirmPaymentInDB = async (sessionId: string) => {
   const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-  const paymentId = session.metadata?.paymentId as string;
-
   if (session.payment_status !== "paid") {
     throw new Error("Payment not completed");
   }
 
+  const paymentId = session.metadata?.paymentId;
+  const bookingId = session.metadata?.bookingId;
+  const userId = session.metadata?.userId;
+
+  if (!paymentId || !bookingId || !userId) {
+    throw new Error("Payment metadata is missing");
+  }
+
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id;
+
+  if (!paymentIntentId) {
+    throw new Error("Payment intent is missing");
+  }
+
+  const booking = await prisma.booking.findUniqueOrThrow({
+    where: {
+      id: bookingId,
+    },
+    include: {
+      service: true,
+    },
+  });
+
+  if (booking.customerId !== userId) {
+    throw new Error("Payment does not belong to this customer");
+  }
+
+  const amount = Number(booking.service.price);
+
   const payment = await prisma.$transaction(async (tx) => {
+    const existingPayment = await tx.payment.findUnique({
+      where: {
+        id: paymentId,
+      },
+    });
+
+    if (!existingPayment) {
+      throw new Error("Payment record not found");
+    }
+
+    if (existingPayment.bookingId !== bookingId) {
+      throw new Error("Payment does not belong to this booking");
+    }
+
+    if (existingPayment.status === "Paid") {
+      return existingPayment;
+    }
+
     const updatedPayment = await tx.payment.update({
-      where: { id: paymentId },
+      where: {
+        id: paymentId,
+      },
       data: {
         status: "Paid",
-        transactionId: session.payment_intent as string,
+        amount,
+        transactionId: paymentIntentId,
         paidAt: new Date(),
       },
     });
 
     await tx.booking.update({
-      where: { id: updatedPayment.bookingId },
-      data: { status: "InProgress" },
+      where: {
+        id: bookingId,
+      },
+      data: {
+        status: "InProgress",
+      },
     });
 
     return updatedPayment;
@@ -112,56 +185,88 @@ const confirmPaymentInDB = async (sessionId: string) => {
 };
 
 const getMyPaymentsFromDB = async (userId: string) => {
-  const result = await prisma.payment.findMany({
-    where: { userId },
+  return prisma.payment.findMany({
+    where: {
+      userId,
+    },
     include: {
       booking: {
-        include: { 
-          service: { select: { service_name: true } },
-          technician: { select: { id: true, name: true } } 
+        include: {
+          service: {
+            select: {
+              service_name: true,
+            },
+          },
+          technician: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
-
-  return result;
 };
 
 const getPaymentByIdFromDB = async (id: string, userId: string) => {
-  const result = await prisma.payment.findFirstOrThrow({
-    where: { id, userId },
+  return prisma.payment.findFirstOrThrow({
+    where: {
+      id,
+      userId,
+    },
     include: {
       booking: {
-        include: { 
-          service: { select: { service_name: true, price: true } }, 
-          technician: { select: { id: true, name: true } } 
+        include: {
+          service: {
+            select: {
+              service_name: true,
+              price: true,
+            },
+          },
+          technician: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },
   });
-
-  return result;
 };
 
 const getTechnicianPaymentsFromDB = async (technicianUserId: string) => {
-  const result = await prisma.payment.findMany({
+  return prisma.payment.findMany({
     where: {
       booking: {
         technicianId: technicianUserId,
       },
     },
     include: {
-      user: { select: { id: true, name: true } }, // sender/customer
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       booking: {
         include: {
-          service: { select: { service_name: true } },
+          service: {
+            select: {
+              service_name: true,
+            },
+          },
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
-  return result;
 };
 
 export const paymentService = {
@@ -169,5 +274,5 @@ export const paymentService = {
   confirmPaymentInDB,
   getMyPaymentsFromDB,
   getPaymentByIdFromDB,
-  getTechnicianPaymentsFromDB
+  getTechnicianPaymentsFromDB,
 };
